@@ -1,4 +1,6 @@
+const cart={
 
+}
 //categories button loading code
 const loadCategories=async()=>{
   const url='https://openapi.programming-hero.com/api/categories';
@@ -26,6 +28,8 @@ const loadAllTress=async()=>{
   const data=await res.json();
   displayAllTrees(data.plants);
 }
+
+
 // display All tress code
 const displayAllTrees=(plants)=>{
   const tressCardContainer=document.getElementById('trees-card-container');
@@ -52,7 +56,7 @@ const displayAllTrees=(plants)=>{
         <span class="font-semibold ${plant.price>500?'text-red-500':'text-green-500'}">$${plant.price}</span>
       </div>
       <div class="card-actions ">
-        <button onclick="addToCart(${plant.id},'${plant.name}', ${plant.price}))" class="btn w-full rounded-full active">Add to cart</button>
+        <button onclick="addToCart(${plant.id},'${plant.name}', ${plant.price})" class="btn w-full rounded-full active">Add to cart</button>
       </div>  
     `;
     tressCardContainer.appendChild(card);
@@ -60,7 +64,7 @@ const displayAllTrees=(plants)=>{
   
 }
 
-const loadCategoryTree=(id)=>{
+function loadCategoryTree(id){
   removeActiveClass();
   const selectedBtn=document.getElementById(id);
   selectedBtn.classList.add('active');
@@ -80,6 +84,74 @@ function removeActiveClass(){
   })
 }
 
+const openTreeModal=async (id)=>{
+  const res=await fetch(`https://openapi.programming-hero.com/api/plant/${id}`)
+  const data=await res.json();
+  displayTreeDetails(data.plants)
+  document.getElementById('my_modal').showModal()
+}
+function displayTreeDetails(plant){
+  const myModal=document.getElementById('my_modal');
+  myModal.innerHTML="";
+  const modalBox=document.createElement('div');
+  modalBox.className='modal-box space-y-4'
+  modalBox.innerHTML=`
+    <figure class="rounded-md">
+        <img  
+          src="${plant.image}"
+          alt="${plant.name}"
+          title="${plant.name}"
+          class="h-70 w-full object-cover"
+        />
+      </figure>
+      <div>
+        <h2 class="card-title">${plant.name}</h2>
+        <p>${plant.description}</p>
+      </div>
+      <div class="flex justify-between items-center">
+        <div class="badge badge-outline badge-success truncate">${plant.category}</div>
+        <span class="font-semibold ${plant.price>500?'text-red-500':'text-green-500'}">$${plant.price}</span>
+      </div>
+      <div class="card-actions ">
+        <button onclick="addToCart(${plant.id},'${plant.name}', ${plant.price})" class="btn w-full rounded-full border-none active">Add to cart</button>
+      </div>  
+    <div class="modal-action">
+        <form method="dialog">
+            <!-- if there is a button in form, it will close the modal -->
+            <button class="btn btn-error">Close</button>
+        </form>
+    </div>
+  `
+  myModal.appendChild(modalBox)
+}
+
+function addToCart(id,name,price){
+  cart[id]=(cart[id]||0)+1;
+  calculateTotal(price);
+  if(cart[id]>1){
+    const count=document.getElementById(`count-${id}`)
+    count.innerText=cart[id];
+  }
+  else{
+    const cardContainer=document.getElementById('card-container');
+    const card=document.createElement('div');
+    card.className='flex justify-between items-center bg-base-100 p-1 rounded-md';
+    card.setAttribute('id',`card-${id}`);
+    card.innerHTML=`
+      <div class="space-y-3">
+        <h2>${name}</h2>
+        <p>$${price} X <span id="count-${id}">1</span></p>
+      </div>
+      <button class="btn">X</button>
+    `
+    cardContainer.appendChild(card);
+  }
+}
+function calculateTotal(price){
+  const totalElm=document.getElementById('total');
+  const totalValue=Number(totalElm.innerText);
+  totalElm.innerText=price+totalValue;
+}
 document.getElementById('all-trees-btn').addEventListener('click',(event)=>{
   removeActiveClass();
   event.target.classList.add('active')
