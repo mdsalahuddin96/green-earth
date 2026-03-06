@@ -1,6 +1,4 @@
-const cart={
-
-}
+let cart=[];
 //categories button loading code
 const loadCategories=async()=>{
   const url='https://openapi.programming-hero.com/api/categories';
@@ -126,34 +124,46 @@ function displayTreeDetails(plant){
 }
 
 function addToCart(id,name,price){
-  cart[id]=(cart[id]||0)+1;
-  calculateTotal(price);
-  if(cart[id]>1){
-    const count=document.getElementById(`count-${id}`)
-    count.innerText=cart[id];
-  }
-  else{
-    const cardContainer=document.getElementById('card-container');
+      const isExistCart=cart.find(item=>item.id===id);
+      if(isExistCart){
+        isExistCart.quantity+=1;
+      }
+      else{
+      cart.push({id,name,price,quantity:1})
+      }
+      updateCart();
+}
+function updateCart(){
+  const cardContainer=document.getElementById('card-container');
+  cardContainer.innerHTML='';
+  let total=0;
+  cart.forEach(item=>{
+    total+=item.price*item.quantity;
     const card=document.createElement('div');
-    card.className='flex justify-between items-center bg-base-100 p-1 rounded-md';
-    card.setAttribute('id',`card-${id}`);
-    card.innerHTML=`
-      <div class="space-y-3">
-        <h2>${name}</h2>
-        <p>$${price} X <span id="count-${id}">1</span></p>
-      </div>
-      <button class="btn">X</button>
-    `
-    cardContainer.appendChild(card);
-  }
+    card.className='card bg-base-100 p-1 rounded-md space-y-3';
+    card.innerHTML=`<div class="flex justify-between items-center ">
+                    <div class="">
+                      <h2 class="text-xl font-medium">${item.name}</h2>
+                      <p>${item.price} X <span id="quantity">${item.quantity}</span></p>
+                    </div>
+                    <button id=${item.id} class="btn">X</button>
+                  </div>
+                  <p class="text-right text-lg text-green-500 font-bold">${item.price*item.quantity}</p>`
+  cardContainer.appendChild(card);
+  })
+  document.getElementById('total').innerText=`$${total}`;
 }
-function calculateTotal(price){
-  const totalElm=document.getElementById('total');
-  const totalValue=Number(totalElm.innerText);
-  totalElm.innerText=price+totalValue;
-}
+
 document.getElementById('all-trees-btn').addEventListener('click',(event)=>{
   removeActiveClass();
   event.target.classList.add('active')
   loadAllTress() 
+})
+
+document.getElementById('card-container').addEventListener('click',(event)=>{
+  const id=event.target.id;
+  const selectedCard=event.target.closest('.card');
+  selectedCard.remove()
+  cart=cart.filter(item=>item.id!=id);
+  updateCart()
 })
